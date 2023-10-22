@@ -8,6 +8,6 @@ async function main() {
 
   httpServer.listen(config.http.port, () => {
     console.log(`🚀 Query endpoint ready at http://localhost:${config.http.port}/graphql`);
-    console.log(`🚀 Subscription endpoint ready at ws://localhost:${config.http.port}/graphql`);
+    console.log(`🚀 Subscription endpoint ready at ws://localhost:${config.http.port}/subscriptions`);
   });
 }

@@ -2,28 +2,28 @@ const { ObjectId } = require('bson');
 
 function makeWatchService(db) {
 
-  async function createWatch(row) {
+  async function create(row) {
     const createdAt = new Date();
     const _row = { ...row, createdAt, updatedAt: createdAt };
     return db.watchColl.insertOne(_row);
   }
 
-  async function retrieveWatch(_id) {
+  async function retrieve(_id) {
     return db.watchColl.findOne({ _id: new ObjectId(_id) });
   }
 
-  async function retrieveWatchByImei(imei) {
+  async function retrieveByImei(imei) {
     return db.watchColl.findOne({ imei });
   }
 
-  async function updateWatch(_id, changes) {
+  async function update(_id, changes) {
     const updatedAt = new Date();
     const $set = { ...changes, updatedAt };
     return db.watchColl.updateOne({ _id: new ObjectId(_id) }, { $set });
   }
 
-  async function updateWatchByImei(imei, changes) {
-    const watch = await retrieveWatchByImei(imei);
+  async function updateByImei(imei, changes) {
+    const watch = await retrieveByImei(imei);
     if (watch) {
       const $set = { ...changes, updatedAt: new Date() };
       return db.watchColl.updateOne({ _id: new ObjectId(watch._id) }, { $set });
@@ -31,7 +31,7 @@ function makeWatchService(db) {
     return null;
   }
 
-  async function upsertWatchByImei(imei, details) {
+  async function upsertByImei(imei, details) {
     const filter = { imei };
     const updateDoc = {
       $set: {
@@ -43,28 +43,28 @@ function makeWatchService(db) {
     return db.watchColl.updateOne(filter, updateDoc, options);
   }
 
-  async function deleteWatch(_id) {
+  async function delete_(_id) {
     return db.watchColl.deleteOne({ _id: new ObjectId(_id) });
   }
 
-  async function deleteWatchByImei(imei) {
+  async function deleteByImei(imei) {
     return db.watchColl.deleteOne({ imei });
   }
 
-  async function deleteWatchesByImeiList(imeiList) {
+  async function deleteesByImeiList(imeiList) {
     return db.watchColl.deleteMany({ imei: { $in: imeiList }});
   }
 
   return {
-    createWatch,
-    retrieveWatch,
-    retrieveWatchByImei,
-    updateWatch,
-    updateWatchByImei,
-    upsertWatchByImei,
-    deleteWatch,
-    deleteWatchByImei,
-    deleteWatchesByImeiList,
+    create,
+    retrieve,
+    retrieveByImei,
+    update,
+    updateByImei,
+    upsertByImei,
+    delete_,
+    deleteByImei,
+    deleteesByImeiList,
   };
 }
 

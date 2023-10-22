@@ -1,24 +1,30 @@
-const { WatchVendorEnum, GqlErrorCodeEnum, WatchModelEnum, WatchStatusEnum } = require('../constants');
+const { PubSub } = require('graphql-subscriptions');
+const { WatchVendorEnum, GqlErrorCodeEnum, WatchModelEnum, WatchStatusEnum, TOPIC } = require('../constants');
 
 function makeGraphqlResolvers(logger, watchService) {
 
+  // TODO: replace with one of these: https://github.com/apollographql/graphql-subscriptions#pubsub-implementations
+  const pubsub = new PubSub();
+
   function hello() {
     logger.info('Query.hello');
-    return 'World!';
+    const msg = 'World! ' + new Date().toISOString();
+    pubsub.publish(TOPIC.HELLO, msg);
+    return msg;
   }
 
   async function watch(_, args) {
     logger.info('Query.watch', args);
     let success = null, error = null;
     try {
-      success = await watchService.retrieveWatch(args._id);
+      success = await watchService.retrieve(args._id);
     } catch (err) {
       error = {
         code: GqlErrorCodeEnum.NOT_FOUND,
         message: err.message || 'Watch not found',
       };
     }
-    logger.info('Query.watch watchService.retrieveWatch', { success, error });
+    logger.info('Query.watch watchService.retrieve', { success, error });
     return { success, error };
   }
 
@@ -26,14 +32,14 @@ function makeGraphqlResolvers(logger, watchService) {
     logger.info('Query.watchByImei', args);
     let success = null, error = null;
     try {
-      success = await watchService.retrieveWatchByImei(args.imei);
+      success = await watchService.retrieveByImei(args.imei);
     } catch (err) {
       error = {
         code: GqlErrorCodeEnum.NOT_FOUND,
         message: err.message || 'Watch not found',
       };
     }
-    logger.info('Query.watchByImei watchService.retrieveWatchByImei', { success, error });
+    logger.info('Query.watchByImei watchService.retrieveByImei', { success, error });
     return { success, error };
   }
 
@@ -41,14 +47,15 @@ function makeGraphqlResolvers(logger, watchService) {
     logger.info('Mutation.createWatch', args);
     let success = null, error = null;
     try {
-      success = await watchService.createWatch(args.data);
+      success = await watchService.create(args.data);
     } catch (err) {
       error = {
         code: GqlErrorCodeEnum.INTERNAL_ERROR,
         message: err.message || 'Internal error',
       };
     }
-    logger.info('Mutation.createWatch watchService.createWatch', { success, error });
+    logger.info('Mutation.createWatch watchService.create', { success, error });
+    pubsub.publish(TOPIC.MESSAGE, { meta: JSON.stringify(success) });
     return { success: !!success, error };
   }
 
@@ -57,15 +64,15 @@ function makeGraphqlResolvers(logger, watchService) {
     let success = null, error = null;
     const { imei, ...details } = args.data;
     try {
-      //const watch = await watchService.retrieveWatchByImei(imei);
-      success = await watchService.upsertWatchByImei(imei, details);
+      //const watch = await watchService.retrieveByImei(imei);
+      success = await watchService.upsertByImei(imei, details);
     } catch (err) {
       error = {
         code: GqlErrorCodeEnum.INTERNAL_ERROR,
         message: err.message || 'Internal error',
       };
     }
-    logger.info('Mutation.upsertWatch watchService.upsertWatchByImei', { success, error });
+    logger.info('Mutation.upsertWatch watchService.upsertByImei', { success, error });
     return { success, error };
   }
 
@@ -79,8 +86,17 @@ function makeGraphqlResolvers(logger, watchService) {
       createWatch,
       upsertWatch,
     },
-    // Subscription: {  
-    // },
+
+    // Apollo server does not support this operation
+    Subscription: {
+      hello: {
+        subscribe: () => pubsub.asyncIterator(TOPIC.HELLO),
+      },
+      message: {
+        subscribe: () => pubsub.asyncIterator(TOPIC.MESSAGE),
+      },
+    },
+
     Watch: {
       status: p => p.status || WatchStatusEnum.UNKNOWN,
     },

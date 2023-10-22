@@ -1,3 +1,8 @@
+const TOPIC = {
+  HELLO: 'HELLO',
+  MESSAGE: 'MESSAGE',
+};
+
 const GqlErrorCodeEnum = {
   INVALID_INPUT : 'INVALID_INPUT',
   NOT_ALLOWED   : 'NOT_ALLOWED',
@@ -28,9 +33,18 @@ const WatchStatusEnum = {
   LOCKED   : 'LOCKED',
 };
 
+const MessageStatusEnum  = {
+  UNKNOWN  : 'UNKNOWN',
+  PENDING  : 'PENDING',
+  STARTED  : 'STARTED',
+  COMPLETED: 'COMPLETED',
+};
+
 module.exports = {
   GqlErrorCodeEnum,
+  MessageStatusEnum,
   WatchVendorEnum,
   WatchModelEnum,
   WatchStatusEnum,
+  TOPIC,
 };
